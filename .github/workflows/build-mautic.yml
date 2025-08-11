@@ -1,0 +1,39 @@
+name: Build Mautic
+
+on:
+  workflow_dispatch:  # Manuell startbar
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout empty repo
+        uses: actions/checkout@v4
+
+      - name: Install PHP 8.1
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          tools: composer
+          coverage: none
+
+      - name: Create Mautic Project (recommended-project)
+        run: composer create-project mautic/recommended-project:^6 mautic --no-dev --prefer-dist
+
+      # Optional: Frontend-Assets bauen (für den Start nicht zwingend)
+      # - name: Build frontend assets
+      #   run: |
+      #     cd mautic
+      #     npm install
+      #     npm run build
+
+      - name: Zip build
+        run: |
+          cd mautic
+          zip -r ../mautic-build.zip .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mautic-build
+          path: mautic-build.zip
