@@ -1,39 +1,42 @@
 name: Build Mautic
 
 on:
-  workflow_dispatch:  # Manuell startbar
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout empty repo
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install PHP 8.1
+      - name: Setup PHP 8.1 + Composer
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.1'
           tools: composer
           coverage: none
 
-      - name: Create Mautic Project (recommended-project)
+      - name: Create recommended project (includes public/, vendor/)
         run: composer create-project mautic/recommended-project:^6 mautic --no-dev --prefer-dist
 
-      # Optional: Frontend-Assets bauen (für den Start nicht zwingend)
-      # - name: Build frontend assets
-      #   run: |
-      #     cd mautic
-      #     npm install
-      #     npm run build
+      - name: Verify structure
+        run: |
+          cd mautic
+          php -r 'echo "public/index.php: ", file_exists("public/index.php") ? "OK\n" : "MISSING\n";'
+          find . -maxdepth 2 -type d -print | sort > ../contents.txt
+          if [ -f public/index.php ]; then echo "OK - public exists" > ../HAS_PUBLIC.txt; else echo "MISSING" > ../HAS_PUBLIC.txt; fi
 
-      - name: Zip build
+      - name: Zip build (flat contents)
         run: |
           cd mautic
           zip -r ../mautic-build.zip .
 
-      - name: Upload artifact
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: mautic-build
-          path: mautic-build.zip
+          path: |
+            mautic-build.zip
+            contents.txt
+            HAS_PUBLIC.txt
