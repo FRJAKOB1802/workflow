@@ -1,0 +1,41 @@
+name: Build SendPortal
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout (empty, just workflow)
+        uses: actions/checkout@v4
+
+      - name: Clone SendPortal repo
+        run: |
+          git clone https://github.com/mettle/sendportal.git sendportal
+          cd sendportal
+          git checkout master
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.1
+          extensions: mbstring, bcmath, intl, pdo_mysql
+          tools: composer:v2
+
+      - name: Install dependencies (no dev)
+        run: |
+          cd sendportal
+          composer install --no-dev --optimize-autoloader
+
+      - name: Build ZIP
+        run: |
+          cd sendportal
+          zip -r ../sendportal-build.zip . -x "*.git*" "tests/*" ".github/*"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sendportal-build
+          path: sendportal-build.zip
