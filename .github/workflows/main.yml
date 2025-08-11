@@ -1,4 +1,4 @@
-name: Build SendPortal
+name: Build SendPortal (PHP 8.2)
 
 on:
   workflow_dispatch:
@@ -6,25 +6,24 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout (empty, just workflow)
+      - name: Checkout (empty)
         uses: actions/checkout@v4
 
-      - name: Clone SendPortal repo
+      - name: Clone SendPortal (main)
         run: |
           git clone https://github.com/mettle/sendportal.git sendportal
           cd sendportal
-          git checkout master
+          git checkout main || git checkout master
 
-      - name: Set up PHP
+      - name: Setup PHP 8.2 + Composer
         uses: shivammathur/setup-php@v2
         with:
-          php-version: 8.1
+          php-version: '8.2'
           extensions: mbstring, bcmath, intl, pdo_mysql
           tools: composer:v2
 
-      - name: Install dependencies (no dev)
+      - name: Install deps (no dev)
         run: |
           cd sendportal
           composer install --no-dev --optimize-autoloader
